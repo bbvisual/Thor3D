@@ -1,0 +1,90 @@
+{
+  "changed_pixels": 4376,
+  "changed_fraction": 0.016693115234375,
+  "tolerance": 4,
+  "shadow_radius": 60,
+  "near_pixels": 25708,
+  "near_max_abs_diff": 2,
+  "near_mean_abs_diff": 0.470515014781391,
+  "near_pixels_over_tolerance": 0,
+  "near_fraction_over_tolerance": 0.0,
+  "far_pixels": 232060,
+  "far_max_abs_diff": 2,
+  "far_mean_abs_diff": 0.3907653193139705,
+  "far_pixels_over_tolerance": 0,
+  "far_fraction_over_tolerance": 0.0,
+  "far_background_unchanged": true,
+  "near_zone_changed": false,
+  "canny_thresholds": [
+    125,
+    250
+  ],
+  "depth_units": "metres (depth.npy); depth.png is uint16 at 1/1000 m",
+  "depth_scale": 1000.0,
+  "edit": {
+    "requested": {
+      "object_id": "Apple|-00.47|+01.15|+00.48",
+      "scale": 2.46,
+      "rotation_delta": {
+        "x": 128,
+        "y": 97,
+        "z": 0
+      }
+    },
+    "original": {
+      "objectId": "Apple|-00.47|+01.15|+00.48",
+      "name": "Apple_3fef4551",
+      "objectType": "Apple",
+      "position": {
+        "x": -0.46516600251197815,
+        "y": 1.151224970817566,
+        "z": 0.4758009910583496
+      },
+      "rotation": {
+        "x": 0.1745070070028305,
+        "y": 5.1999992138007656e-05,
+        "z": 0.03407900035381317
+      },
+      "size": {
+        "x": 0.10601478815078735,
+        "y": 0.11345028877258301,
+        "z": 0.10602694749832153
+      }
+    },
+    "achieved": {
+      "position": {
+        "x": -0.46516600251197815,
+        "y": 1.151224970817566,
+        "z": 0.4758009910583496
+      },
+      "rotation": {
+        "x": 51.82550048828125,
+        "y": 277.00006103515625,
+        "z": 180.03407287597656
+      },
+      "size": {
+        "x": 0.27506840229034424,
+        "y": 0.2720987796783447,
+        "z": 0.2625313401222229
+      }
+    },
+    "requested_pose": {
+      "position": {
+        "x": -0.46516600251197815,
+        "y": 1.151224970817566,
+        "z": 0.4758009910583496
+      },
+      "rotation": {
+        "x": 128.17450700700283,
+        "y": 97.00005199999214,
+        "z": 0.03407900035381317
+      }
+    },
+    "achieved_scale_ratio": {
+      "x": 2.5946229491975017,
+      "y": 2.3983965366873665,
+      "z": 2.476081282320977
+    }
+  },
+  "scene": "FloorPlan1_physics"
+}

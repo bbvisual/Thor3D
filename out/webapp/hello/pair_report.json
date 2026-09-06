@@ -1,0 +1,83 @@
+{
+  "changed_pixels": 7015,
+  "changed_fraction": 0.026760101318359375,
+  "tolerance": 4,
+  "shadow_radius": 60,
+  "near_pixels": 31110,
+  "near_max_abs_diff": 3,
+  "near_mean_abs_diff": 0.682738669238187,
+  "near_pixels_over_tolerance": 0,
+  "near_fraction_over_tolerance": 0.0,
+  "far_pixels": 224019,
+  "far_max_abs_diff": 3,
+  "far_mean_abs_diff": 0.5356777773313871,
+  "far_pixels_over_tolerance": 0,
+  "far_fraction_over_tolerance": 0.0,
+  "far_background_unchanged": true,
+  "near_zone_changed": false,
+  "edit": {
+    "requested": {
+      "object_id": "Book|+00.15|+01.10|+00.62",
+      "rotation_delta": {
+        "x": -1,
+        "y": 35,
+        "z": 0
+      },
+      "position_delta": {
+        "x": -0.41,
+        "y": -0.28,
+        "z": 0
+      }
+    },
+    "original": {
+      "objectId": "Book|+00.15|+01.10|+00.62",
+      "name": "Book_e5ef3174",
+      "objectType": "Book",
+      "position": {
+        "x": 0.1549990028142929,
+        "y": 1.0992610454559326,
+        "z": 0.6169989705085754
+      },
+      "rotation": {
+        "x": 359.91119384765625,
+        "y": 135.82623291015625,
+        "z": 0.059317003935575485
+      },
+      "size": {
+        "x": 0.5342613458633423,
+        "y": 0.061808109283447266,
+        "z": 0.5323814153671265
+      }
+    },
+    "achieved": {
+      "position": {
+        "x": -0.2550010085105896,
+        "y": 0.8192610740661621,
+        "z": 0.6169989705085754
+      },
+      "rotation": {
+        "x": 358.91119384765625,
+        "y": 170.82623291015625,
+        "z": 0.05931701138615608
+      },
+      "size": {
+        "x": 0.472375750541687,
+        "y": 0.06771445274353027,
+        "z": 0.3935575485229492
+      }
+    },
+    "requested_pose": {
+      "position": {
+        "x": -0.25500099718570707,
+        "y": 0.8192610454559326,
+        "z": 0.6169989705085754
+      },
+      "rotation": {
+        "x": 358.91119384765625,
+        "y": 170.82623291015625,
+        "z": 0.059317003935575485
+      }
+    }
+  },
+  "scene": "FloorPlan1_physics"
+}

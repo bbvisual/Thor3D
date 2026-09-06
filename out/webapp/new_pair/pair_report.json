@@ -1,0 +1,84 @@
+{
+  "changed_pixels": 7015,
+  "changed_fraction": 0.026760101318359375,
+  "tolerance": 4,
+  "shadow_radius": 60,
+  "near_pixels": 31110,
+  "near_max_abs_diff": 4,
+  "near_mean_abs_diff": 0.6728383156541305,
+  "near_pixels_over_tolerance": 0,
+  "near_fraction_over_tolerance": 0.0,
+  "far_pixels": 224019,
+  "far_max_abs_diff": 3,
+  "far_mean_abs_diff": 0.49928800682085,
+  "far_pixels_over_tolerance": 0,
+  "far_fraction_over_tolerance": 0.0,
+  "far_background_unchanged": true,
+  "near_zone_changed": false,
+  "canny_thresholds": [
+    104,
+    207
+  ],
+  "depth_units": "metres (depth.npy); depth.png is uint16 at 1/1000 m",
+  "depth_scale": 1000.0,
+  "edit": {
+    "requested": {
+      "object_id": "Book|+00.15|+01.10|+00.62",
+      "position_delta": {
+        "x": -0.33,
+        "y": -0.25,
+        "z": 0
+      }
+    },
+    "original": {
+      "objectId": "Book|+00.15|+01.10|+00.62",
+      "name": "Book_e5ef3174",
+      "objectType": "Book",
+      "position": {
+        "x": 0.1549990028142929,
+        "y": 1.0992610454559326,
+        "z": 0.6169989705085754
+      },
+      "rotation": {
+        "x": 359.91119384765625,
+        "y": 135.82623291015625,
+        "z": 0.059317003935575485
+      },
+      "size": {
+        "x": 0.5342617034912109,
+        "y": 0.06198525428771973,
+        "z": 0.5324020385742188
+      }
+    },
+    "achieved": {
+      "position": {
+        "x": -0.17500099539756775,
+        "y": 0.8492610454559326,
+        "z": 0.6169989705085754
+      },
+      "rotation": {
+        "x": 359.91119384765625,
+        "y": 135.82623291015625,
+        "z": 0.059317003935575485
+      },
+      "size": {
+        "x": 0.5342617630958557,
+        "y": 0.06198620796203613,
+        "z": 0.5324021577835083
+      }
+    },
+    "requested_pose": {
+      "position": {
+        "x": -0.1750009971857071,
+        "y": 0.8492610454559326,
+        "z": 0.6169989705085754
+      },
+      "rotation": {
+        "x": 359.91119384765625,
+        "y": 135.82623291015625,
+        "z": 0.059317003935575485
+      }
+    }
+  },
+  "scene": "FloorPlan1_physics"
+}

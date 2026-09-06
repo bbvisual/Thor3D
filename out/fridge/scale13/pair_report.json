@@ -1,0 +1,79 @@
+{
+  "changed_pixels": 70553,
+  "changed_fraction": 0.2691383361816406,
+  "tolerance": 4,
+  "shadow_radius": 60,
+  "near_pixels": 63343,
+  "near_max_abs_diff": 2,
+  "near_mean_abs_diff": 0.15176104699808976,
+  "near_pixels_over_tolerance": 0,
+  "near_fraction_over_tolerance": 0.0,
+  "far_pixels": 128248,
+  "far_max_abs_diff": 3,
+  "far_mean_abs_diff": 0.13067650177780551,
+  "far_pixels_over_tolerance": 0,
+  "far_fraction_over_tolerance": 0.0,
+  "far_background_unchanged": true,
+  "near_zone_changed": false,
+  "edit": {
+    "requested": {
+      "object_type": "Fridge",
+      "scale": 1.3
+    },
+    "original": {
+      "objectId": "Fridge|-02.10|+00.00|+01.07",
+      "name": "Fridge_e92350c6",
+      "objectType": "Fridge",
+      "position": {
+        "x": -2.0969998836517334,
+        "y": 0.0,
+        "z": 1.0720000267028809
+      },
+      "rotation": {
+        "x": -0.0,
+        "y": 89.9999771118164,
+        "z": -0.0
+      },
+      "size": {
+        "x": 0.7242083549499512,
+        "y": 1.966814637184143,
+        "z": 1.013000726699829
+      }
+    },
+    "achieved": {
+      "position": {
+        "x": -2.0969998836517334,
+        "y": 0.0,
+        "z": 1.0720000267028809
+      },
+      "rotation": {
+        "x": -0.0,
+        "y": 89.9999771118164,
+        "z": -0.0
+      },
+      "size": {
+        "x": 0.9414706230163574,
+        "y": 2.556858539581299,
+        "z": 1.3169007301330566
+      }
+    },
+    "requested_pose": {
+      "position": {
+        "x": -2.0969998836517334,
+        "y": 0.0,
+        "z": 1.0720000267028809
+      },
+      "rotation": {
+        "x": -0.0,
+        "y": 89.9999771118164,
+        "z": -0.0
+      }
+    },
+    "achieved_scale_ratio": {
+      "x": 1.299999670787312,
+      "y": 1.2999997514976358,
+      "z": 1.2999997881771301
+    }
+  },
+  "scene": "FloorPlan1"
+}

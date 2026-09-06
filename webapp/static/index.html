@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Thor3D — object editor</title>
+<style>
+  :root {
+    --bg: #14161a; --panel: #1c1f26; --line: #2c313c; --fg: #e6e9ef;
+    --muted: #8b93a5; --accent: #5aa9ff; --ok: #4ec9a0; --warn: #e0a458;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--fg);
+    font: 14px/1.5 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  header {
+    padding: 12px 18px; border-bottom: 1px solid var(--line);
+    display: flex; gap: 14px; align-items: center; flex-wrap: wrap;
+  }
+  h1 { font-size: 15px; margin: 0; font-weight: 600; letter-spacing: .02em; }
+  .grow { flex: 1; }
+  main { display: flex; gap: 18px; padding: 18px; align-items: flex-start; flex-wrap: wrap; }
+  #panel { width: 330px; flex-shrink: 0; }
+  .card {
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 10px; padding: 14px; margin-bottom: 14px;
+  }
+  .card h2 {
+    font-size: 11px; text-transform: uppercase; letter-spacing: .09em;
+    color: var(--muted); margin: 0 0 10px; font-weight: 600;
+  }
+  label { display: block; margin-bottom: 11px; }
+  .row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 3px; }
+  .row b { font-weight: 600; font-variant-numeric: tabular-nums; }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+  select, input[type=text], button {
+    background: #232833; color: var(--fg); border: 1px solid var(--line);
+    border-radius: 7px; padding: 7px 10px; font: inherit; font-size: 13px; width: 100%;
+  }
+  button { cursor: pointer; }
+  button:hover:not(:disabled) { border-color: var(--accent); }
+  button:disabled { opacity: .45; cursor: default; }
+  .btnrow { display: flex; gap: 8px; }
+  .views { display: flex; gap: 14px; flex-wrap: wrap; }
+  figure { margin: 0; }
+  figcaption { font-size: 11px; color: var(--muted); margin-bottom: 6px; letter-spacing: .05em; }
+  img { display: block; border-radius: 8px; border: 1px solid var(--line); background: #000; max-width: 100%; }
+  #status { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .ok { color: var(--ok); } .warn { color: var(--warn); }
+  .hint { font-size: 11.5px; color: var(--muted); margin: 8px 0 0; }
+  .measure { font-size: 11.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Thor3D</h1>
+  <span id="status">starting…</span>
+  <span class="grow"></span>
+  <label style="display:flex;gap:7px;align-items:center;margin:0;font-size:12.5px;">
+    <input type="checkbox" id="diffToggle" style="width:auto;accent-color:var(--accent)"> difference
+  </label>
+</header>
+
+<main>
+  <div id="panel">
+    <div class="card">
+      <h2>Scene</h2>
+      <label><select id="scene"></select></label>
+      <label><select id="object"><option>— pick a scene —</option></select></label>
+      <div class="btnrow">
+        <button id="camPrev" disabled>‹ view</button>
+        <button id="camNext" disabled>view ›</button>
+      </div>
+      <p class="hint" id="camInfo"></p>
+    </div>
+
+    <div class="card">
+      <h2>Size</h2>
+      <label>
+        <span class="row"><span>uniform scale</span><b id="vScale">1.00×</b></span>
+        <input type="range" id="scale" min="0.25" max="3" step="0.01" value="1">
+      </label>
+      <p class="measure" id="sizeInfo"></p>
+      <p class="hint">AI2-THOR scales uniformly only — no per-axis stretch.</p>
+    </div>
+
+    <div class="card">
+      <h2>Rotation <span style="text-transform:none;letter-spacing:0">(° from original)</span></h2>
+      <label><span class="row"><span>yaw · Y</span><b id="vRy">0°</b></span>
+        <input type="range" id="ry" min="-180" max="180" step="1" value="0"></label>
+      <label><span class="row"><span>pitch · X</span><b id="vRx">0°</b></span>
+        <input type="range" id="rx" min="-180" max="180" step="1" value="0"></label>
+      <label><span class="row"><span>roll · Z</span><b id="vRz">0°</b></span>
+        <input type="range" id="rz" min="-180" max="180" step="1" value="0"></label>
+    </div>
+
+    <div class="card">
+      <h2>Position <span style="text-transform:none;letter-spacing:0">(m from original)</span></h2>
+      <label><span class="row"><span>X</span><b id="vPx">0.00</b></span>
+        <input type="range" id="px" min="-1.5" max="1.5" step="0.01" value="0"></label>
+      <label><span class="row"><span>Y — height</span><b id="vPy">0.00</b></span>
+        <input type="range" id="py" min="-1.5" max="1.5" step="0.01" value="0"></label>
+      <label><span class="row"><span>Z</span><b id="vPz">0.00</b></span>
+        <input type="range" id="pz" min="-1.5" max="1.5" step="0.01" value="0"></label>
+    </div>
+
+    <div class="card">
+      <h2>Export</h2>
+      <label><input type="text" id="name" placeholder="pair name (optional)"></label>
+      <div class="btnrow">
+        <button id="reset">Reset</button>
+        <button id="save" disabled>Save pair</button>
+      </div>
+      <p class="hint" id="saveInfo"></p>
+    </div>
+  </div>
+
+  <div class="views">
+    <figure>
+      <figcaption>ORIGINAL</figcaption>
+      <img id="imgOrig" alt="original render">
+    </figure>
+    <figure>
+      <figcaption>EDITED</figcaption>
+      <img id="imgEdit" alt="edited render">
+      <canvas id="diffCanvas" style="display:none;border-radius:8px;border:1px solid var(--line)"></canvas>
+    </figure>
+  </div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const status = $("status");
+const controls = ["scale","rx","ry","rz","px","py","pz"];
+
+let originalSrc = null;
+// One request in flight at a time; the newest slider state supersedes any
+// pending one. Without this, dragging a slider queues dozens of stale renders.
+let inFlight = false, pending = false;
+
+function state() {
+  return {
+    scale: +$("scale").value,
+    rotation: { x: +$("rx").value, y: +$("ry").value, z: +$("rz").value },
+    position: { x: +$("px").value, y: +$("py").value, z: +$("pz").value },
+  };
+}
+
+function syncLabels() {
+  $("vScale").textContent = (+$("scale").value).toFixed(2) + "×";
+  for (const [id, el, suf] of [["vRx","rx","°"],["vRy","ry","°"],["vRz","rz","°"]])
+    $(id).textContent = $(el).value + suf;
+  for (const [id, el] of [["vPx","px"],["vPy","py"],["vPz","pz"]])
+    $(id).textContent = (+$(el).value).toFixed(2);
+}
+
+async function post(url, body) {
+  const r = await fetch(url, {
+    method: "POST", headers: {"Content-Type": "application/json"},
+    body: JSON.stringify(body || {}),
+  });
+  const j = await r.json();
+  if (!r.ok || j.error) throw new Error(j.error || r.statusText);
+  return j;
+}
+
+async function pushEdit() {
+  if (inFlight) { pending = true; return; }
+  inFlight = true;
+  try {
+    const j = await post("/api/edit", state());
+    $("imgEdit").src = j.image;
+    $("sizeInfo").textContent =
+      `bbox ${j.size.x.toFixed(2)} × ${j.size.y.toFixed(2)} × ${j.size.z.toFixed(2)} m`;
+    status.innerHTML = `<span class="ok">${j.ms} ms</span>`;
+    $("save").disabled = false;
+    if ($("diffToggle").checked) drawDiff();
+  } catch (e) {
+    status.innerHTML = `<span class="warn">${e.message}</span>`;
+  } finally {
+    inFlight = false;
+    if (pending) { pending = false; pushEdit(); }
+  }
+}
+
+function setBaseline(j) {
+  originalSrc = j.image;
+  $("imgOrig").src = j.image;
+  $("imgEdit").src = j.image;
+  $("camInfo").textContent = `view ${j.camera.index + 1} of ${j.camera.count}`;
+  $("camPrev").disabled = $("camNext").disabled = j.camera.count < 2;
+  const s = j.original.size;
+  $("sizeInfo").textContent = `bbox ${s.x.toFixed(2)} × ${s.y.toFixed(2)} × ${s.z.toFixed(2)} m`;
+}
+
+function resetControls() {
+  $("scale").value = 1;
+  for (const id of ["rx","ry","rz","px","py","pz"]) $(id).value = 0;
+  syncLabels();
+}
+
+function drawDiff() {
+  const a = $("imgOrig"), b = $("imgEdit");
+  if (!a.naturalWidth || !b.naturalWidth) return;
+  const cv = $("diffCanvas"), w = a.naturalWidth, h = a.naturalHeight;
+  cv.width = w; cv.height = h;
+  cv.style.width = b.clientWidth + "px";
+  const ctx = cv.getContext("2d");
+  ctx.drawImage(a, 0, 0); const A = ctx.getImageData(0, 0, w, h);
+  ctx.drawImage(b, 0, 0); const B = ctx.getImageData(0, 0, w, h);
+  for (let i = 0; i < A.data.length; i += 4) {
+    const d = Math.min(255, 4 * Math.max(
+      Math.abs(A.data[i]-B.data[i]),
+      Math.abs(A.data[i+1]-B.data[i+1]),
+      Math.abs(A.data[i+2]-B.data[i+2])));
+    B.data[i] = d; B.data[i+1] = d; B.data[i+2] = d; B.data[i+3] = 255;
+  }
+  ctx.putImageData(B, 0, 0);
+}
+
+$("diffToggle").onchange = e => {
+  $("diffCanvas").style.display = e.target.checked ? "block" : "none";
+  $("imgEdit").style.display = e.target.checked ? "none" : "block";
+  if (e.target.checked) drawDiff();
+};
+
+for (const id of controls) {
+  $(id).addEventListener("input", () => { syncLabels(); pushEdit(); });
+}
+
+$("reset").onclick = () => { resetControls(); pushEdit(); };
+
+$("scene").onchange = async () => {
+  status.textContent = "loading scene…";
+  $("save").disabled = true;
+  try {
+    const j = await post("/api/scene", { scene: $("scene").value });
+    const sel = $("object");
+    sel.innerHTML = '<option value="">— pick an object —</option>' +
+      j.objects.map(o => `<option value="${o.objectId}">${o.objectType}${o.pickupable ? " ·" : ""}</option>`).join("");
+    status.textContent = `${j.objects.length} editable objects`;
+    $("imgOrig").removeAttribute("src"); $("imgEdit").removeAttribute("src");
+  } catch (e) { status.innerHTML = `<span class="warn">${e.message}</span>`; }
+};
+
+$("object").onchange = async () => {
+  if (!$("object").value) return;
+  status.textContent = "framing…";
+  resetControls();
+  try {
+    setBaseline(await post("/api/object", { objectId: $("object").value }));
+    status.innerHTML = '<span class="ok">ready</span>';
+    $("save").disabled = false;
+  } catch (e) { status.innerHTML = `<span class="warn">${e.message}</span>`; }
+};
+
+for (const [btn, step] of [["camPrev", -1], ["camNext", 1]]) {
+  $(btn).onclick = async () => {
+    status.textContent = "moving camera…";
+    try {
+      setBaseline(await post("/api/camera", { step }));
+      await pushEdit();   // re-apply the current sliders from the new viewpoint
+    } catch (e) { status.innerHTML = `<span class="warn">${e.message}</span>`; }
+  };
+}
+
+$("save").onclick = async () => {
+  status.textContent = "saving…";
+  $("save").disabled = true;
+  try {
+    const j = await post("/api/save", { ...state(), name: $("name").value });
+    const r = j.report;
+    $("saveInfo").innerHTML =
+      `wrote <code>${j.out_dir}</code><br>changed ${(r.changed_fraction*100).toFixed(1)}% · ` +
+      `far background ${r.far_background_unchanged
+        ? '<span class="ok">unchanged</span>'
+        : `<span class="warn">${r.far_pixels_over_tolerance} px differ</span>`}`;
+    status.innerHTML = '<span class="ok">saved</span>';
+  } catch (e) {
+    $("saveInfo").innerHTML = `<span class="warn">${e.message}</span>`;
+    status.innerHTML = `<span class="warn">save failed</span>`;
+  } finally { $("save").disabled = false; }
+};
+
+(async function init() {
+  syncLabels();
+  const s = await (await fetch("/api/scenes")).json();
+  $("scene").innerHTML =
+    `<optgroup label="iTHOR">${s.ithor.map(n => `<option>${n}</option>`).join("")}</optgroup>` +
+    `<optgroup label="RoboTHOR">${s.robothor.map(n => `<option>${n}</option>`).join("")}</optgroup>`;
+  status.textContent = "pick a scene";
+  $("scene").onchange();
+})();
+</script>
+</body>
+</html>
