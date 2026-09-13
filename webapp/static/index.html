@@ -46,6 +46,7 @@
   figure { margin: 0; }
   figcaption { font-size: 11px; color: var(--muted); margin-bottom: 6px; letter-spacing: .05em; }
   img { display: block; border-radius: 8px; border: 1px solid var(--line); background: #000; max-width: 100%; }
+  #imgOrig { cursor: crosshair; }
   #status { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
   .ok { color: var(--ok); } .warn { color: var(--warn); }
   .hint { font-size: 11.5px; color: var(--muted); margin: 8px 0 0; }
@@ -112,13 +113,16 @@
         <button id="reset">Reset</button>
         <button id="save" disabled>Save pair</button>
       </div>
+      <div class="btnrow" style="margin-top:8px;">
+        <button id="restore">Restore removed</button>
+      </div>
       <p class="hint" id="saveInfo"></p>
     </div>
   </div>
 
   <div class="views">
     <figure>
-      <figcaption>ORIGINAL</figcaption>
+      <figcaption>ORIGINAL <span style="text-transform:none;letter-spacing:0">— click an object to remove it</span></figcaption>
       <img id="imgOrig" alt="original render">
     </figure>
     <figure>
@@ -231,6 +235,45 @@ for (const id of controls) {
 
 $("reset").onclick = () => { resetControls(); pushEdit(); };
 
+// Click anywhere on the ORIGINAL image to remove whatever object is under
+// the cursor: pick() hit-tests the click against that image's instance
+// masks, remove() then teleports the resolved object out of every camera's
+// view (see the Session docstring in server.py for why teleport, not
+// disable). Sliders are reset afterwards since they described the object
+// that may have just been removed.
+$("imgOrig").addEventListener("click", async (e) => {
+  const img = e.target;
+  if (!img.naturalWidth) return;
+  const rect = img.getBoundingClientRect();
+  const x = (e.clientX - rect.left) / rect.width;
+  const y = (e.clientY - rect.top) / rect.height;
+  status.textContent = "picking…";
+  try {
+    const picked = await post("/api/pick", { x, y });
+    status.textContent = `removing ${picked.objectType}…`;
+    const r = await post("/api/remove", { objectId: picked.objectId });
+    $("imgOrig").src = r.image;
+    $("imgEdit").src = r.image;
+    resetControls();
+    $("save").disabled = true;
+    status.innerHTML = `<span class="ok">removed ${picked.objectType}</span>`;
+    if ($("diffToggle").checked) drawDiff();
+  } catch (err) {
+    status.innerHTML = `<span class="warn">${err.message}</span>`;
+  }
+});
+
+$("restore").onclick = async () => {
+  status.textContent = "restoring…";
+  try {
+    const j = await post("/api/restore", {});
+    $("imgOrig").src = j.image;
+    $("imgEdit").src = j.image;
+    status.innerHTML = '<span class="ok">restored</span>';
+    if ($("diffToggle").checked) drawDiff();
+  } catch (e) { status.innerHTML = `<span class="warn">${e.message}</span>`; }
+};
+
 $("scene").onchange = async () => {
   status.textContent = "loading scene…";
   $("save").disabled = true;
@@ -240,7 +283,8 @@ $("scene").onchange = async () => {
     sel.innerHTML = '<option value="">— pick an object —</option>' +
       j.objects.map(o => `<option value="${o.objectId}">${o.objectType}${o.pickupable ? " ·" : ""}</option>`).join("");
     status.textContent = `${j.objects.length} editable objects`;
-    $("imgOrig").removeAttribute("src"); $("imgEdit").removeAttribute("src");
+    $("imgOrig").src = j.image; $("imgEdit").src = j.image;
+    $("camInfo").textContent = "";
   } catch (e) { status.innerHTML = `<span class="warn">${e.message}</span>`; }
 };
 

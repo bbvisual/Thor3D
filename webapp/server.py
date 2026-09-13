@@ -4,6 +4,7 @@
 Run it, open the printed URL, pick a scene and an object, then drag sliders to
 change its size, rotation, and position. The camera and the rest of the scene
 stay locked, so the preview differs from the original only where the object is.
+Click any object in the ORIGINAL image to remove it in real time.
 
     python webapp/server.py                 # http://127.0.0.1:8000
     python webapp/server.py --port 8080 --width 640 --height 640
@@ -88,12 +89,33 @@ class Session:
         self.original_size: Optional[Dict[str, float]] = None
         self.applied_scale = 1.0
         self.original_rgb: Optional[np.ndarray] = None
+        # Instance masks for whatever is currently shown as the ORIGINAL image,
+        # keyed by objectId -- what click-to-remove hit-tests against. Refreshed
+        # any time that image changes (scene load, camera reframe, a removal),
+        # never by a slider preview, since clicks always target the left image.
+        self._masks: Dict[str, np.ndarray] = {}
+        # objectId -> its pose before being parked out of view, so a removal
+        # could be undone; teleporting (not DisableObject) is what makes that
+        # possible -- the object is still live, just relocated.
+        self.removed: Dict[str, Dict[str, Any]] = {}
+
+    def _current_masks(self, event) -> Dict[str, np.ndarray]:
+        try:
+            return dict(event.instance_masks)
+        except Exception:  # segmentation not produced for this frame
+            return {}
+
+    def _find_object(self, object_id: str) -> Dict[str, Any]:
+        for o in self.renderer.controller.last_event.metadata["objects"]:
+            if o["objectId"] == object_id:
+                return o
+        raise KeyError(f"{object_id} not in scene {self.scene}")
 
     # -------------------------------------------------------------- scene load
 
     def load_scene(self, scene: str) -> Dict[str, Any]:
         agent_mode = default_agent_mode(scene)
-        self.renderer.controller.reset(
+        event = self.renderer.controller.reset(
             scene=scene,
             agentMode=agent_mode,
             fieldOfView=default_fov(scene),
@@ -103,9 +125,15 @@ class Session:
         self.scene = scene
         self.spec = None
         self.object_id = None
-        objects = pick_editable_objects(self.renderer.controller.last_event.metadata["objects"])
+        self.removed = {}
+        # A general room view goes up immediately so there is something to
+        # click on before any object is picked from the dropdown.
+        self.original_rgb = np.asarray(event.frame)
+        self._masks = self._current_masks(event)
+        objects = pick_editable_objects(event.metadata["objects"])
         return {
             "scene": scene,
+            "image": png_data_uri(self.original_rgb),
             "objects": sorted(
                 (
                     {
@@ -158,6 +186,7 @@ class Session:
 
         event = self.renderer.controller.step("Pass")
         self.original_rgb = np.asarray(event.frame)
+        self._masks = self._current_masks(event)
         return {
             "image": png_data_uri(self.original_rgb),
             "objectId": self.object_id,
@@ -177,6 +206,71 @@ class Session:
             if o["objectId"] == self.object_id:
                 return o
         raise KeyError(f"{self.object_id} vanished from the scene")
+
+    # ------------------------------------------------------------ click-to-remove
+
+    def pick(self, x: float, y: float) -> Dict[str, Any]:
+        """Resolve a click on the ORIGINAL image (normalized 0..1 coords) to an object."""
+        if not self._masks:
+            raise ValueError("no image loaded yet")
+        col = min(self.width - 1, max(0, int(x * self.width)))
+        row = min(self.height - 1, max(0, int(y * self.height)))
+        for object_id, mask in self._masks.items():
+            if mask[row, col]:
+                return {"objectId": object_id, "objectType": self._find_object(object_id)["objectType"]}
+        raise ValueError("no object there -- try clicking more toward its center")
+
+    def remove(self, object_id: str) -> Dict[str, Any]:
+        """Make an object disappear by teleporting it far below the floor.
+
+        This reuses the same TeleportObject path the position slider already
+        drives (see ``apply`` below), rather than ``DisableObject``: the object
+        stays live in the scene, just parked out of every camera's view, which
+        is what keeps a removal undoable via ``restore``.
+        """
+        c = self.renderer.controller
+        obj = self._find_object(object_id)
+        if object_id not in self.removed:
+            self.removed[object_id] = {
+                "position": dict(obj["position"]),
+                "rotation": dict(obj["rotation"]),
+            }
+        target_position = dict(obj["position"])
+        target_position["y"] -= 50.0  # comfortably below any floor or basement mesh
+        ev = c.step(
+            action="TeleportObject", objectId=object_id,
+            position=target_position, rotation=dict(obj["rotation"]),
+            forceAction=True, forceKinematic=True,
+        )
+        if not ev.metadata["lastActionSuccess"]:
+            raise RuntimeError(ev.metadata.get("errorMessage", "TeleportObject failed"))
+
+        event = c.step("Pass")
+        self.original_rgb = np.asarray(event.frame)
+        self._masks = self._current_masks(event)
+
+        # The object under active slider edit can be the one just removed --
+        # drop the session's handle on it so a stray slider event doesn't try
+        # to drive an object that is no longer meant to be on screen.
+        if self.object_id == object_id:
+            self.object_id = None
+
+        return {"image": png_data_uri(self.original_rgb), "removedId": object_id}
+
+    def restore(self) -> Dict[str, Any]:
+        """Put every removed object back at its recorded pose."""
+        c = self.renderer.controller
+        for object_id, pose in self.removed.items():
+            c.step(
+                action="TeleportObject", objectId=object_id,
+                position=pose["position"], rotation=pose["rotation"],
+                forceAction=True, forceKinematic=True,
+            )
+        self.removed = {}
+        event = c.step("Pass")
+        self.original_rgb = np.asarray(event.frame)
+        self._masks = self._current_masks(event)
+        return {"image": png_data_uri(self.original_rgb)}
 
     # ------------------------------------------------------------------- edits
 
@@ -302,6 +396,35 @@ def api_camera():
     try:
         with SESSION.lock:
             return jsonify(SESSION.cycle_camera(int(request.json.get("step", 1))))
+    except Exception as e:
+        return _err(e)
+
+
+@app.route("/api/pick", methods=["POST"])
+def api_pick():
+    d = request.json
+    try:
+        with SESSION.lock:
+            return jsonify(SESSION.pick(float(d["x"]), float(d["y"])))
+    except Exception as e:
+        return _err(e)
+
+
+@app.route("/api/remove", methods=["POST"])
+def api_remove():
+    d = request.json
+    try:
+        with SESSION.lock:
+            return jsonify(SESSION.remove(str(d["objectId"])))
+    except Exception as e:
+        return _err(e)
+
+
+@app.route("/api/restore", methods=["POST"])
+def api_restore():
+    try:
+        with SESSION.lock:
+            return jsonify(SESSION.restore())
     except Exception as e:
         return _err(e)
 
