@@ -3,6 +3,7 @@ import sys
 import json
 import argparse
 import itertools
+import shutil
 from PIL import Image
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -16,11 +17,17 @@ def main():
 
     # Output to the specific trial directory
     out_dir = f"/data/roy/RoboDel/public/Prerendered_Scenes/{args.trial}"
+    
+    # Wipe the directory if it already exists to ensure a clean slate
+    if os.path.exists(out_dir):
+        print(f"Clearing existing contents in {out_dir}...")
+        shutil.rmtree(out_dir)
     os.makedirs(out_dir, exist_ok=True)
     
     print(f"Initializing {args.scene} -> Saving to {args.trial}")
 
-    with ThorRenderer(width=1280, height=720, gpu_device=1, quality="Ultra") as r:
+    # Resolution reduced to 1024x576 to minimize pixel count and save storage space
+    with ThorRenderer(width=1024, height=576, gpu_device=1, quality="Ultra") as r:
         r.controller.reset(
             scene=args.scene, 
             snapToGrid=False,
@@ -30,21 +37,21 @@ def main():
         # NOTE: Update these coordinates based on your web_explorer findings for this specific trial!
         event = r.controller.step(
             action="TeleportFull",
-            x=-1.2,
-            y=0.9019,
-            z=-0.5,
+            x=-0.75,
+            y=0.901,
+            z=0.5,
             rotation=dict(x=0, y=90, z=0),
-            horizon=25,
+            horizon=30,
             standing=True
         )
 
-        # 1. Save base image
-        base_path = os.path.join(out_dir, "base.png")
-        Image.fromarray(event.frame).save(base_path)
+        # 1. Save base image as JPEG with 85% quality compression
+        base_path = os.path.join(out_dir, "base.jpg")
+        Image.fromarray(event.frame).save(base_path, format="JPEG", quality=85)
         print(f"Saved base image: {base_path}")
 
         # 2. Extract Native 2D Bounding Boxes
-        target_types = {"Apple", "Bowl", "Bread",  "Tomato", "Book"}
+        target_types = {"Potato", "Bowl", "Bread",  "Tomato", "Egg","CellPhone" ,"Mug"}
         live_objects = event.metadata['objects']
         detections2D = event.instance_detections2D
         
@@ -93,9 +100,10 @@ def main():
                     r.controller.step(action="DisableObject", objectId=obj_id)
 
                 labels_removed = sorted([label for label, _ in combo])
-                filename = f"removed_{'_'.join(labels_removed)}.png"
+                # Change combinatorial files to .jpg and apply JPEG compression
+                filename = f"removed_{'_'.join(labels_removed)}.jpg"
                 
-                Image.fromarray(r.controller.last_event.frame).save(os.path.join(out_dir, filename))
+                Image.fromarray(r.controller.last_event.frame).save(os.path.join(out_dir, filename), format="JPEG", quality=85)
                 total_generated += 1
 
         for _, obj_id in items:
