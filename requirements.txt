@@ -6,7 +6,9 @@
 # With sudo:
 #     sudo apt install vulkan-tools
 ai2thor>=5.0.0
-numpy
-Pillow
-opencv-python-headless   # optional; only speeds up the QA mask dilation
-flask                    # only needed for webapp/server.py
+opencv-python-headless
+flask
+fastapi==0.141.1
+uvicorn==0.52.4
+pydantic==2.13.5
+pillow>=11.1.0
